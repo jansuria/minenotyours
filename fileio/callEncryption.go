@@ -4,9 +4,7 @@ import (
 	"minenotyours/mycrypto"
 )
 
-func CallEncryption(password string) error {
-
-	path := `C:\Users\Jan-PC\Documents\Codes\Go\minenotyours\mine\test.txt`
+func CallEncryption(password string, path string) error {
 
 	parameters := &mycrypto.ArgonParameters{
 		Memory:      64 * 1024,
