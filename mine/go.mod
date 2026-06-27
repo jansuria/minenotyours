@@ -1,4 +1,4 @@
-module minenotyours/cli
+module minenotyours/mine
 
 go 1.26.4
 

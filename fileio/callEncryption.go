@@ -4,9 +4,9 @@ import (
 	"minenotyours/mycrypto"
 )
 
-func CallEncryption(password string) {
+func CallEncryption(password string) error {
 
-	path := "test.txt"
+	path := `C:\Users\Jan-PC\Documents\Codes\Go\minenotyours\mine\test.txt`
 
 	parameters := &mycrypto.ArgonParameters{
 		Memory:      64 * 1024,
@@ -15,5 +15,5 @@ func CallEncryption(password string) {
 		SaltLength:  16,
 		KeyLength:   32,
 	}
-	mycrypto.EncryptFile(path, password, *parameters)
+	return mycrypto.EncryptFile(path, password, *parameters)
 }

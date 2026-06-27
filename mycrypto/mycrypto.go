@@ -19,29 +19,33 @@ type ArgonParameters struct {
 	KeyLength   uint32
 }
 
-func EncryptFile(filePath string, password string, argonParameters ArgonParameters) {
+func EncryptFile(filePath string, password string, argonParameters ArgonParameters) error {
 	key, salt, err := GenerateHash(password, argonParameters)
 	if err != nil {
 		fmt.Println("Error: ", err)
+		return err
 	}
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("Error: ", err)
+		return err
 	}
 
 	ciphertext, err := EncrytWithGCM(data, key)
 	if err != nil {
 		fmt.Println("Error: ", err)
-		return
+		return err
 	}
 
 	output := append(salt, ciphertext...)
 	err = os.WriteFile(filePath, output, 0644)
 	if err != nil {
 		fmt.Println("Error saving file: ", err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func EncrytWithGCM(plaintext, key []byte) ([]byte, error) {
