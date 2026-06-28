@@ -63,11 +63,22 @@ You should see a usage error rather than "command not found". If you get
 ## Usage
 
 ```sh
-mine encrypt -file <path> -password <password>
-mine decrypt -file <path> -password <password>
+mine encrypt -file <path>
+mine decrypt -file <path>
 ```
 
-Both `-file` and `-password` are required.
+`-file` is the only flag, and it's required. The **password is entered
+interactively** — `mine` prompts for it and hides your typing, so the password
+never appears on screen, in your shell history, or in the process list.
+
+- On **encrypt**, you're asked to enter the password twice (to catch typos). If the
+  two entries don't match, nothing is encrypted.
+- On **decrypt**, you're asked once. A wrong password fails safely and leaves the
+  file unchanged.
+
+> The password prompt requires a real terminal. You can't pipe a password in
+> (e.g. `echo pw | mine ...`) — that's intentional, to keep secrets off the
+> command line.
 
 ### Paths are relative to your current directory
 
@@ -76,22 +87,22 @@ files anywhere:
 
 ```sh
 cd ~/Documents/secrets
-mine encrypt -file taxes.txt -password hunter2   # encrypts ~/Documents/secrets/taxes.txt
-mine decrypt -file taxes.txt -password hunter2   # restores it
+mine encrypt -file taxes.txt   # encrypts ~/Documents/secrets/taxes.txt
+mine decrypt -file taxes.txt   # restores it
 ```
 
 Absolute paths work too:
 
 ```sh
-mine encrypt -file "C:\Users\me\notes.txt" -password hunter2
+mine encrypt -file "C:\Users\me\notes.txt"
 ```
 
 ### Example round-trip
 
 ```sh
 echo hello > secret.txt
-mine encrypt -file secret.txt -password hunter2   # secret.txt is now ciphertext
-mine decrypt -file secret.txt -password hunter2   # secret.txt is "hello" again
+mine encrypt -file secret.txt   # prompts for password (twice); secret.txt is now ciphertext
+mine decrypt -file secret.txt   # prompts for password; secret.txt is "hello" again
 ```
 
 ---
@@ -102,7 +113,7 @@ mine decrypt -file secret.txt -password hunter2   # secret.txt is "hello" again
 |------|--------------------------------------------------------------------|
 | `0`  | Success                                                            |
 | `1`  | Operation failed (e.g. wrong password, file not found)            |
-| `2`  | Misuse (unknown command, missing `-file`/`-password`)             |
+| `2`  | Misuse (unknown command, missing `-file`)                         |
 
 ---
 
@@ -112,9 +123,9 @@ mine decrypt -file secret.txt -password hunter2   # secret.txt is "hello" again
   its encrypted form. Keep a backup of anything irreplaceable until you've confirmed
   you can decrypt it.
 - **There is no password recovery.** If you forget the password, the data is gone.
-- **`-password` on the command line is visible** in your shell history and process
-  list. Treat this tool as a learning/personal utility rather than a hardened secret
-  manager. (A future version may read the password interactively.)
+- The password is read **interactively and never echoed**, so it stays out of your
+  shell history and the process list. Still, treat this tool as a learning/personal
+  utility rather than a hardened secret manager.
 
 ---
 
@@ -135,8 +146,8 @@ relative `replace` directives in each `go.mod`.
 
 ## Roadmap
 
-- [x] CLI: `encrypt` / `decrypt` with `-file` and `-password`
-- [ ] Interactive password prompt (hide input, keep it out of shell history)
+- [x] CLI: `encrypt` / `decrypt` with `-file`
+- [x] Interactive password prompt (hidden input, confirm-on-encrypt)
 - [ ] TUI version
 - [ ] Optional `-out` flag to write to a new file instead of in place
 
