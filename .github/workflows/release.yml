@@ -27,9 +27,11 @@ jobs:
             echo "No prior tag found — collecting all commits"
             LATEST_TAG="v0.0.0"
             COMMITS=$(git log HEAD --pretty=format:"%s")
+            FULL_LOG=$(git log HEAD --pretty=format:"%s %b")
           else
             echo "Latest tag: $LATEST_TAG"
             COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s")
+            FULL_LOG=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s %b")
           fi
           echo "Commits since ${LATEST_TAG}:"
           echo "$COMMITS"
@@ -71,3 +73,10 @@ jobs:
           gh release create "$NEXT_TAG" \
             --generate-notes \
             --title "Release $NEXT_TAG"
+
+          # Close issues referenced in commits (e.g. #4, Closes #7)
+          ISSUE_NUMS=$(echo "$FULL_LOG" | grep -oE '#[0-9]+' | grep -oE '[0-9]+' | sort -u)
+          for NUM in $ISSUE_NUMS; do
+            echo "Closing issue #$NUM"
+            gh issue close "$NUM" --comment "Closed automatically by release $NEXT_TAG." 2>/dev/null || true
+          done
