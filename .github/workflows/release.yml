@@ -21,12 +21,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Find latest tag; default to v0.0.0 if none
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "Latest tag: $LATEST_TAG"
-
-          # Collect commit subjects since last tag
-          COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s")
+          # Find latest tag; if none exists, collect all commits
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No prior tag found — collecting all commits"
+            LATEST_TAG="v0.0.0"
+            COMMITS=$(git log HEAD --pretty=format:"%s")
+          else
+            echo "Latest tag: $LATEST_TAG"
+            COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s")
+          fi
           echo "Commits since ${LATEST_TAG}:"
           echo "$COMMITS"
 
