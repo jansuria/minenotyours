@@ -32,7 +32,7 @@ func EncryptFile(filePath string, password string, argonParameters ArgonParamete
 		return err
 	}
 
-	ciphertext, err := EncrytWithGCM(data, key)
+	ciphertext, err := EncryptWithGCM(data, key)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return err
@@ -48,7 +48,7 @@ func EncryptFile(filePath string, password string, argonParameters ArgonParamete
 	return nil
 }
 
-func EncrytWithGCM(plaintext, key []byte) ([]byte, error) {
+func EncryptWithGCM(plaintext, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
