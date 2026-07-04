@@ -80,7 +80,10 @@ func DecryptFile(filePath string, password string, argonParameters ArgonParamete
 		return fmt.Errorf("decrypt: %w", err)
 	}
 
-	return os.WriteFile(filePath, plaintext, 0644)
+	if err := os.WriteFile(filePath, plaintext, 0644); err != nil {
+    return fmt.Errorf("write %q: %w", filePath, err)
+}
+return nil
 
 }
 
