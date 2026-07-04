@@ -22,7 +22,7 @@ type ArgonParameters struct {
 func EncryptFile(filePath string, password string, argonParameters ArgonParameters) error {
 	key, salt, err := GenerateHash(password, argonParameters)
 	if err != nil {
-		return fmt.Errorf("read %q: %w", filePath, err)
+		return fmt.Errorf("derive key: %w", err)
 	}
 
 	data, err := os.ReadFile(filePath)
@@ -32,13 +32,13 @@ func EncryptFile(filePath string, password string, argonParameters ArgonParamete
 
 	ciphertext, err := EncryptWithGCM(data, key)
 	if err != nil {
-		return fmt.Errorf("read %q: %w", filePath, err)
+		return fmt.Errorf("encrypt: %w", err)
 	}
 
 	output := append(salt, ciphertext...)
 	err = os.WriteFile(filePath, output, 0644)
 	if err != nil {
-		return fmt.Errorf("read %q: %w", filePath, err)
+		return fmt.Errorf("write %q: %w", filePath, err)
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func DecryptFile(filePath string, password string, argonParameters ArgonParamete
 
 	plaintext, err := DecryptWithGCM(remaining, key)
 	if err != nil {
-		return fmt.Errorf("read %q: %w", filePath, err)
+		return fmt.Errorf("decrypt: %w", err)
 	}
 
 	return os.WriteFile(filePath, plaintext, 0644)
