@@ -20,14 +20,20 @@ type ArgonParameters struct {
 }
 
 func EncryptFile(filePath string, password string, argonParameters ArgonParameters) error {
-	key, salt, err := GenerateHash(password, argonParameters)
+
+	fileinfo, err := os.Stat(filePath)
 	if err != nil {
-		return fmt.Errorf("derive key: %w", err)
+		return fmt.Errorf("stat %q: %w", filePath, err)
 	}
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("read %q: %w", filePath, err)
+	}
+
+	key, salt, err := GenerateHash(password, argonParameters)
+	if err != nil {
+		return fmt.Errorf("derive key: %w", err)
 	}
 
 	ciphertext, err := EncryptWithGCM(data, key)
@@ -36,7 +42,7 @@ func EncryptFile(filePath string, password string, argonParameters ArgonParamete
 	}
 
 	output := append(salt, ciphertext...)
-	err = os.WriteFile(filePath, output, 0644)
+	err = os.WriteFile(filePath, output, fileinfo.Mode().Perm())
 	if err != nil {
 		return fmt.Errorf("write %q: %w", filePath, err)
 	}
@@ -65,6 +71,11 @@ func EncryptWithGCM(plaintext, key []byte) ([]byte, error) {
 
 func DecryptFile(filePath string, password string, argonParameters ArgonParameters) error {
 
+	fileinfo, err := os.Stat(filePath)
+	if err != nil {
+		return fmt.Errorf("stat %q: %w", filePath, err)
+	}
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("read %q: %w", filePath, err)
@@ -80,10 +91,10 @@ func DecryptFile(filePath string, password string, argonParameters ArgonParamete
 		return fmt.Errorf("decrypt: %w", err)
 	}
 
-	if err := os.WriteFile(filePath, plaintext, 0644); err != nil {
-    return fmt.Errorf("write %q: %w", filePath, err)
-}
-return nil
+	if err := os.WriteFile(filePath, plaintext, fileinfo.Mode().Perm()); err != nil {
+		return fmt.Errorf("write %q: %w", filePath, err)
+	}
+	return nil
 
 }
 
