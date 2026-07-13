@@ -20,35 +20,37 @@ type ArgonParameters struct {
 }
 
 func EncryptFile(filePath string, password string, argonParameters ArgonParameters) error {
-	key, salt, err := GenerateHash(password, argonParameters)
+
+	fileinfo, err := os.Stat(filePath)
 	if err != nil {
-		fmt.Println("Error: ", err)
-		return err
+		return fmt.Errorf("stat %q: %w", filePath, err)
 	}
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Error: ", err)
-		return err
+		return fmt.Errorf("read %q: %w", filePath, err)
 	}
 
-	ciphertext, err := EncrytWithGCM(data, key)
+	key, salt, err := GenerateHash(password, argonParameters)
 	if err != nil {
-		fmt.Println("Error: ", err)
-		return err
+		return fmt.Errorf("derive key: %w", err)
+	}
+
+	ciphertext, err := EncryptWithGCM(data, key)
+	if err != nil {
+		return fmt.Errorf("encrypt: %w", err)
 	}
 
 	output := append(salt, ciphertext...)
-	err = os.WriteFile(filePath, output, 0644)
+	err = os.WriteFile(filePath, output, fileinfo.Mode().Perm())
 	if err != nil {
-		fmt.Println("Error saving file: ", err)
-		return err
+		return fmt.Errorf("write %q: %w", filePath, err)
 	}
 
 	return nil
 }
 
-func EncrytWithGCM(plaintext, key []byte) ([]byte, error) {
+func EncryptWithGCM(plaintext, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -69,9 +71,14 @@ func EncrytWithGCM(plaintext, key []byte) ([]byte, error) {
 
 func DecryptFile(filePath string, password string, argonParameters ArgonParameters) error {
 
+	fileinfo, err := os.Stat(filePath)
+	if err != nil {
+		return fmt.Errorf("stat %q: %w", filePath, err)
+	}
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("read %q: %w", filePath, err)
 	}
 
 	salt := data[:argonParameters.SaltLength]
@@ -81,10 +88,13 @@ func DecryptFile(filePath string, password string, argonParameters ArgonParamete
 
 	plaintext, err := DecryptWithGCM(remaining, key)
 	if err != nil {
-		return err
+		return fmt.Errorf("decrypt: %w", err)
 	}
 
-	return os.WriteFile(filePath, plaintext, 0644)
+	if err := os.WriteFile(filePath, plaintext, fileinfo.Mode().Perm()); err != nil {
+		return fmt.Errorf("write %q: %w", filePath, err)
+	}
+	return nil
 
 }
 
