@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"minenotyours/fileio"
+	"minenotyours/mine/tui"
 	"os"
 
 	"golang.org/x/term"
@@ -89,7 +90,14 @@ func main() {
 			os.Exit(2)
 		}
 	} else {
-		fmt.Println("Not valid")
-		os.Exit(2)
+		if !term.IsTerminal(int(os.Stdin.Fd())) {
+			fmt.Println("mine: the interactive UI needs a terminal.")
+			fmt.Println("Use: mine encrypt -file <path>  |  mine decrypt -file <path>")
+			os.Exit(2)
+		}
+		if err := tui.Run(); err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
 	}
 }
